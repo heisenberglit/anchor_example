@@ -11,7 +11,7 @@ const PREFIX: &str = "n_metadata";
 mod rarity {
     use super::*;
     
-    pub fn add_metadata(ctx: Context<AddMetadata> , rank: u64 , rarity : String) -> ProgramResult {
+    pub fn add_metadata(ctx: Context<AddMetadata> , rank: u64 , rarity : RarityChart) -> ProgramResult {
         let state = &mut ctx.accounts.mint_data;
         state.rank = rank;
         state.rarity = rarity;
@@ -19,10 +19,9 @@ mod rarity {
         Ok(())
     }
 
-    pub fn update_metadata(ctx: Context<UpdateMetadata> , rank: u64 , rarity : String) -> ProgramResult {
+    pub fn update_metadata(ctx: Context<UpdateMetadata> , rank: u64 , rarity : RarityChart) -> ProgramResult {
         let state = &mut ctx.accounts.mint_data;
         msg!("Rank changed to {}", rank);
-        msg!("Rarity changed to {}",  rarity);
         state.rank = rank;
         state.rarity = rarity;
         Ok(())
@@ -48,7 +47,7 @@ pub struct AddMetadata<'info> {
     #[account(signer)]
     pub authority: AccountInfo<'info>,
     pub mint: Account<'info, Mint>,
-    #[account(init_if_needed ,seeds = [PREFIX.as_bytes(),mint.key().as_ref()],bump, payer = authority, space= 8+8+64)]
+    #[account(init_if_needed ,seeds = [PREFIX.as_bytes(),mint.key().as_ref()],bump, payer = authority, space= 32+32)]
     pub mint_data: Account<'info, MintData>,
     pub system_program: Program<'info, System>,
 }
@@ -56,7 +55,7 @@ pub struct AddMetadata<'info> {
 
 #[account]
 pub struct MintData {
-    pub rarity: String,
+    pub rarity: RarityChart,
     pub rank: u64,
     pub authority: Pubkey,
 }

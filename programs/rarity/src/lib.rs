@@ -44,7 +44,7 @@ pub struct AddMetadata<'info> {
     #[account(signer)]
     pub authority: AccountInfo<'info>,
     pub mint: Account<'info, Mint>,
-    #[account(init_if_needed ,seeds = [PREFIX.as_bytes(),mint.key().as_ref()],bump, payer = authority, space= 32+32)]
+    #[account(init_if_needed ,seeds = [PREFIX.as_bytes(),mint.key().as_ref()],bump, payer = authority, space= 8 + std::mem::size_of::<MintData>())]
     pub mint_data: Account<'info, MintData>,
     pub system_program: Program<'info, System>,
 }

@@ -18,6 +18,11 @@ mod rarity {
 
     pub fn add_metadata(ctx: Context<AddMetadata> , rarity : RarityChart) -> ProgramResult {
         let state = &mut ctx.accounts.mint_data;
+
+        if *ctx.accounts.authority.key != CENTRAL_AUTHORITY.key(){
+            return Err(ErrorCode::Unauthorized.into());
+        }
+
         state.rarity = rarity;
         state.authority = ctx.accounts.authority.to_account_info().key();
         Ok(())
@@ -25,6 +30,11 @@ mod rarity {
 
     pub fn update_metadata(ctx: Context<UpdateMetadata> ,  rarity : RarityChart) -> ProgramResult {
         let state = &mut ctx.accounts.mint_data;
+
+        if *ctx.accounts.authority.key != CENTRAL_AUTHORITY.key(){
+            return Err(ErrorCode::Unauthorized.into());
+        }
+        
         state.rarity = rarity;
         Ok(())
     }
@@ -39,7 +49,6 @@ pub struct UpdateMetadata<'info> {
         bump
     )]
     pub mint_data: ProgramAccount<'info, MintData>,
-    #[account(constraint = authority.key == &CENTRAL_AUTHORITY.key() @ErrorCode::Unauthorized)]
     pub authority: Signer<'info>,
     pub mint: Account<'info, Mint>
 }
@@ -47,7 +56,7 @@ pub struct UpdateMetadata<'info> {
 
 #[derive(Accounts)]
 pub struct AddMetadata<'info> {
-    #[account(signer,constraint = authority.key == &CENTRAL_AUTHORITY.key() @ErrorCode::Unauthorized)]
+    #[account(signer)]
     pub authority: AccountInfo<'info>,
     pub mint: Account<'info, Mint>,
     #[account(init_if_needed ,seeds = [PREFIX.as_bytes(),mint.key().as_ref()],bump, payer = authority, space= 8 + std::mem::size_of::<MintData>())]

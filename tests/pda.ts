@@ -35,9 +35,7 @@ describe('pda', () => {
       TOKEN_PROGRAM_ID
     );
 
-
-
-    const tokenAccount = await mint.createAccount(provider.wallet.publicKey);
+    const tokenAccount = await mint.createAccount(payer.publicKey);
     await mint.mintTo(
       tokenAccount,
       mintAuthority.publicKey,
@@ -47,7 +45,7 @@ describe('pda', () => {
 
     mintAddresss = mint.publicKey.toBase58();
     const prefix = "n_metadata";
-    const [mintPda, _] = await PublicKey.findProgramAddress(
+    const [mintPda, bump] = await PublicKey.findProgramAddress(
       [
         Buffer.from(anchor.utils.bytes.utf8.encode(prefix)),
         mint.publicKey.toBuffer(),
@@ -135,6 +133,40 @@ describe('pda', () => {
         mint: mintAddresss,
         mintData: mintPda
       },
+    })
+
+    let mintData = await program.account.mintData.fetch(
+      mintPda
+    );
+
+    assert.deepEqual(mintData.rarity,rarity);
+  });
+
+  it('Add with different central authority', async () => {
+
+    //To test fail case change the 
+    const wallet = Keypair.generate();
+    const address = new anchor.web3.PublicKey("3h6p8BMtUmADUEUeeRZK2PcEbS1eDzvjwfpCLVExSGmY");
+    const prefix = "n_metadata";
+    const [mintPda] = await PublicKey.findProgramAddress(
+      [
+        Buffer.from(anchor.utils.bytes.utf8.encode(prefix)),
+        address.toBuffer(),
+      ],
+      program.programId
+    );
+
+    const rarity = {
+      uncommon: {},
+    };
+    
+    await program.rpc.addMetadata(rarity,{
+      accounts: {
+        authority: provider.wallet.publicKey,
+        mint: mintAddresss,
+        mintData: mintPda,
+        systemProgram: SystemProgram.programId,
+      }
     })
 
     let mintData = await program.account.mintData.fetch(

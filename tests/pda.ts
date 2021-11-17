@@ -15,7 +15,6 @@ describe('pda', () => {
 
   anchor.setProvider(provider)
 
-
   const program = anchor.workspace.Rarity as Program<Rarity>;
 
   it('Creates a metadata account for mint', async () => {
@@ -60,7 +59,7 @@ describe('pda', () => {
       uncommon: {},
     };
 
-    await program.rpc.addMetadata(new anchor.BN(1),rarity, {
+    await program.rpc.addMetadata(rarity, {
       accounts: {
         authority: provider.wallet.publicKey,
         mint: mint.publicKey,
@@ -74,8 +73,8 @@ describe('pda', () => {
     );
 
 
-    assert.ok(mintData.rank.toNumber() === 1);
     assert.deepEqual(mintData.rarity,rarity);
+    assert.equal(mintData.authority.toBase58(), provider.wallet.publicKey.toBase58());
   })
 
   it('Update metadata account for mint', async () => {
@@ -95,7 +94,7 @@ describe('pda', () => {
     const rarity = {
       legendary: {},
     };
-    await program.rpc.updateMetadata(new anchor.BN(100), rarity, {
+    await program.rpc.updateMetadata(rarity, {
       accounts: {
         authority: provider.wallet.publicKey,
         mint: mintAddresss,
@@ -107,8 +106,8 @@ describe('pda', () => {
       mintPda
     );
 
-    assert.ok(mintData.rank.toNumber() === 100);
     assert.deepEqual(mintData.rarity,rarity);
+    assert.equal(mintData.authority.toBase58(), provider.wallet.publicKey.toBase58());
   });
 
 
@@ -130,7 +129,7 @@ describe('pda', () => {
       uncommon: {},
     };
     
-    await program.rpc.updateMetadata(new anchor.BN(1), rarity, {
+    await program.rpc.updateMetadata(rarity, {
       accounts: {
         authority: wallet.publicKey,
         mint: mintAddresss,
@@ -142,7 +141,6 @@ describe('pda', () => {
       mintPda
     );
 
-    assert.ok(mintData.rank.toNumber() === 100);
     assert.deepEqual(mintData.rarity,rarity);
   });
 })

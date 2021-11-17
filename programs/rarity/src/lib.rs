@@ -11,18 +11,15 @@ const PREFIX: &str = "n_metadata";
 mod rarity {
     use super::*;
     
-    pub fn add_metadata(ctx: Context<AddMetadata> , rank: u64 , rarity : RarityChart) -> ProgramResult {
+    pub fn add_metadata(ctx: Context<AddMetadata> , rarity : RarityChart) -> ProgramResult {
         let state = &mut ctx.accounts.mint_data;
-        state.rank = rank;
         state.rarity = rarity;
         state.authority = ctx.accounts.authority.to_account_info().key();
         Ok(())
     }
 
-    pub fn update_metadata(ctx: Context<UpdateMetadata> , rank: u64 , rarity : RarityChart) -> ProgramResult {
+    pub fn update_metadata(ctx: Context<UpdateMetadata> ,  rarity : RarityChart) -> ProgramResult {
         let state = &mut ctx.accounts.mint_data;
-        msg!("Rank changed to {}", rank);
-        state.rank = rank;
         state.rarity = rarity;
         Ok(())
     }
@@ -56,7 +53,6 @@ pub struct AddMetadata<'info> {
 #[account]
 pub struct MintData {
     pub rarity: RarityChart,
-    pub rank: u64,
     pub authority: Pubkey,
 }
 

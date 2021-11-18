@@ -1,18 +1,28 @@
 
 use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
-
+use anchor_lang::solana_program::pubkey::Pubkey;
 
 declare_id!("5xYiyYKXxh2DNinm2PF6oUgkskF1aaRbKX753FYit5AJ");
 
 const PREFIX: &str = "n_metadata";
+const CENTRAL_AUTHORITY: anchor_lang::prelude::Pubkey = Pubkey::new_from_array(
+    [5, 160, 181, 17, 63, 223, 239, 157, 145, 118, 246, 79, 
+                56, 54, 65, 214, 202, 196, 172, 187,19, 146, 47, 240, 78, 
+                151, 162, 116, 135, 21, 104, 11]);
 
 #[program]
 mod rarity {
     use super::*;
-    
+
+
     pub fn add_metadata(ctx: Context<AddMetadata> , rarity : RarityChart) -> ProgramResult {
         let state = &mut ctx.accounts.mint_data;
+
+        if *ctx.accounts.authority.key != CENTRAL_AUTHORITY.key(){
+            return Err(ErrorCode::Unauthorized.into());
+        }
+
         state.rarity = rarity;
         state.authority = ctx.accounts.authority.to_account_info().key();
         Ok(())
@@ -20,6 +30,11 @@ mod rarity {
 
     pub fn update_metadata(ctx: Context<UpdateMetadata> ,  rarity : RarityChart) -> ProgramResult {
         let state = &mut ctx.accounts.mint_data;
+
+        if *ctx.accounts.authority.key != CENTRAL_AUTHORITY.key(){
+            return Err(ErrorCode::Unauthorized.into());
+        }
+        
         state.rarity = rarity;
         Ok(())
     }
@@ -44,16 +59,15 @@ pub struct AddMetadata<'info> {
     #[account(signer)]
     pub authority: AccountInfo<'info>,
     pub mint: Account<'info, Mint>,
-    #[account(init_if_needed ,seeds = [PREFIX.as_bytes(),mint.key().as_ref()],bump, payer = authority, space= 32+32)]
+    #[account(init_if_needed ,seeds = [PREFIX.as_bytes(),mint.key().as_ref()],bump, payer = authority, space= 8 + std::mem::size_of::<MintData>())]
     pub mint_data: Account<'info, MintData>,
     pub system_program: Program<'info, System>,
 }
 
-
 #[account]
 pub struct MintData {
     pub rarity: RarityChart,
-    pub authority: Pubkey,
+    pub authority: Pubkey
 }
 
 
@@ -64,6 +78,13 @@ pub enum RarityChart {
     Rare,
     UltraRare,
     Legendary
+}
+
+
+#[error]
+pub enum ErrorCode {
+    #[msg("You are not authorized to call this action.")]
+    Unauthorized
 }
 
 
